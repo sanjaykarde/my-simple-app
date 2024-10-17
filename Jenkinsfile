@@ -33,7 +33,7 @@ pipeline {
         stage('Push to ECR') {
             steps {
                 script {
-                    docker.withRegistry("https://${env.ECR_REPO_URI}", 'ecr:aws-credentials') {
+                    docker.withRegistry("https://${env.ECR_REPO_URI}", 'aws-credentials') {
                         dockerImage.push("${env.BUILD_NUMBER}")
                         dockerImage.push("latest")
                     }
