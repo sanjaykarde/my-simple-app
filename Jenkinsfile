@@ -17,26 +17,19 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
+                    // Build the Docker image using the Jenkins docker DSL
                     dockerImage = docker.build("${env.ECR_REPO_URI}:$BUILD_NUMBER")
                 }
             }
         }
 
-        stage('Login to AWS ECR') {
-            steps {
-                sh '''
-                aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO_URI
-                '''
-            }
-        }
-
-        stage('Push to ECR') {
+        stage('Login to AWS ECR and Push Image') {
             steps {
                 script {
-                    docker.withRegistry("https://${env.ECR_REPO_URI}", 'aws-credentials') {
-                        dockerImage.push("${env.BUILD_NUMBER}")
-                        dockerImage.push("latest")
-                    }
+                    // Login to ECR and push the image
+                    sh "aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO_URI"
+                    dockerImage.push("${env.BUILD_NUMBER}")
+                    dockerImage.push("latest")
                 }
             }
         }
@@ -53,4 +46,3 @@ pipeline {
         }
     }
 }
-
