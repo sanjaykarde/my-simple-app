@@ -17,7 +17,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    dockerImage = docker.build("${env.ECR_REPO_URI}:$BUILD_NUMBER")
+                    dockerImage = docker.build("${env.ECR_REPO_URI}:${env.BUILD_NUMBER}")
                 }
             }
         }
@@ -25,10 +25,17 @@ pipeline {
         stage('Login to AWS ECR') {
             steps {
                 sh '''
-                aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO_URI
-                dockerImage.push("${env.BUILD_NUMBER}")
-                dockerImage.push("latest")
+                aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO_URI}
                 '''
+            }
+        }
+
+        stage('Push Docker Image to ECR') {
+            steps {
+                script {
+                    dockerImage.push("${env.BUILD_NUMBER}")
+                    dockerImage.push("latest")
+                }
             }
         }
 
@@ -41,7 +48,7 @@ pipeline {
         stage('Terraform Plan') {
             steps {
                 sh '''
-                terraform plan -var "ecr_repo_uri=${env.ECR_REPO_URI}" -var "build_number=${env.BUILD_NUMBER}" -out tfplan
+                terraform plan -var "ecr_repo_uri=${ECR_REPO_URI}" -var "build_number=${BUILD_NUMBER}" -out tfplan
                 '''
             }
         }
@@ -64,3 +71,4 @@ pipeline {
         }
     }
 }
+
