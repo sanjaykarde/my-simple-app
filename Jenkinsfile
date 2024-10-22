@@ -17,20 +17,38 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Build the Docker image using the Jenkins docker DSL
                     dockerImage = docker.build("${env.ECR_REPO_URI}:$BUILD_NUMBER")
                 }
             }
         }
 
-        stage('Login to AWS ECR and Push Image') {
+        stage('Login to AWS ECR') {
             steps {
-                script {
-                    // Login to ECR and push the image
-                    sh "aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO_URI"
-                    dockerImage.push("${env.BUILD_NUMBER}")
-                    dockerImage.push("latest")
-                }
+                sh '''
+                aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO_URI
+                dockerImage.push("${env.BUILD_NUMBER}")
+                dockerImage.push("latest")
+                '''
+            }
+        }
+
+        stage('Terraform Init') {
+            steps {
+                sh 'terraform init'
+            }
+        }
+
+        stage('Terraform Plan') {
+            steps {
+                sh '''
+                terraform plan -var "ecr_repo_uri=${env.ECR_REPO_URI}" -var "build_number=${env.BUILD_NUMBER}" -out tfplan
+                '''
+            }
+        }
+
+        stage('Terraform Apply') {
+            steps {
+                sh 'terraform apply tfplan'
             }
         }
 
