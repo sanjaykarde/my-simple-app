@@ -26,17 +26,29 @@ pipeline {
             steps {
                 sh '''
                 aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO_URI
+                dockerImage.push("${env.BUILD_NUMBER}")
+                dockerImage.push("latest")
                 '''
             }
         }
 
-        stage('Push to ECR') {
+        stage('Terraform Init') {
             steps {
-                script {
-                    docker.withRegistry("${env.ECR_REPO_URI}", '') {
-                        dockerImage.push()
-                    }
-                }
+                sh 'terraform init'
+            }
+        }
+
+        stage('Terraform Plan') {
+            steps {
+                sh '''
+                terraform plan -var "ecr_repo_uri=${env.ECR_REPO_URI}" -var "build_number=${env.BUILD_NUMBER}" -out tfplan
+                '''
+            }
+        }
+
+        stage('Terraform Apply') {
+            steps {
+                sh 'terraform apply tfplan'
             }
         }
 
@@ -52,4 +64,3 @@ pipeline {
         }
     }
 }
-
