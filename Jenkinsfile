@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         AWS_CREDENTIALS = credentials('aws-credentials')
-        ECR_REPO_URI = '903655155088.dkr.ecr.ap-south-1.amazonaws.com/my-simple-app'
+        ECR_REPO_URI = '903655155088.dkr.ecr.ap-south-1.amazonaws.com/my-simple-app-repo'
         AWS_REGION = 'ap-south-1'
     }
 
