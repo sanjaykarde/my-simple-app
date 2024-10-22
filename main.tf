@@ -76,3 +76,11 @@ output "ecs_service_name" {
   value = aws_ecs_service.my_service.name
 }
 
+resource "aws_ecr_repository" "my_simple_app" {
+  name                 = "my-simple-app"
+  image_tag_mutability = "MUTABLE"
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+}
+
